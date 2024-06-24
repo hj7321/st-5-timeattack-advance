@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { todoApi } from "../api/todos";
@@ -25,8 +25,8 @@ export default function TodoList() {
     try {
       queryClient.setQueryData(["todos"], (prev) =>
         prev.map((todo) =>
-          todo.id === id ? { ...todo, liked: !todo.liked } : todo,
-        ),
+          todo.id === id ? { ...todo, liked: !todo.liked } : todo
+        )
       );
       await todoApi.patch(`/todos/${id}`, {
         liked: !currentLiked,
@@ -38,6 +38,13 @@ export default function TodoList() {
       refetch();
     }
   };
+
+  const { mutate } = useMutation({
+    mutationFn: handleLike,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["todos"]);
+    },
+  });
 
   if (isPending) {
     return <div style={{ fontSize: 36 }}>로딩중...</div>;
@@ -68,12 +75,18 @@ export default function TodoList() {
             </button>
             {todo.liked ? (
               <FaHeart
-                onClick={() => handleLike(todo.id, todo.liked)}
+                onClick={() => {
+                  handleLike(todo.id, todo.liked);
+                  mutate(todos);
+                }}
                 style={{ cursor: "pointer" }}
               />
             ) : (
               <FaRegHeart
-                onClick={() => handleLike(todo.id, todo.liked)}
+                onClick={() => {
+                  handleLike(todo.id, todo.liked);
+                  mutate(todos);
+                }}
                 style={{ cursor: "pointer" }}
               />
             )}

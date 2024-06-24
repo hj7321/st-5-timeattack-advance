@@ -5,7 +5,7 @@
       "title": "1",
       "contents": "1",
       "isCompleted": false,
-      "liked": false,
+      "liked": true,
       "createdAt": 1718587545473
     },
     {
@@ -21,7 +21,7 @@
       "title": "3",
       "contents": "3",
       "isCompleted": false,
-      "liked": false,
+      "liked": true,
       "createdAt": 1718594820497
     },
     {
