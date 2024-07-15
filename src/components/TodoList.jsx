@@ -19,31 +19,41 @@ export default function TodoList() {
 
   // TODO: 아래 handleLike 로 구현되어 있는 부분을 useMutation 으로 리팩터링 해보세요. 모든 기능은 동일하게 동작해야 합니다.
   const queryClient = useQueryClient();
+
   const likeMutation = useMutation({
     mutationFn: ({ id, currentLiked }) =>
+      // 실제로 데이터를 갱신하고 서버로 요청을 보내는 작업
+      // 특정 Todo의 liked 상태를 토글함
       todoApi.patch(`/todos/${id}`, {
         liked: !currentLiked,
       }),
     onMutate: async ({ id }) => {
-      await queryClient.cancelQueries({ queryKey: ["todos"] });
-      const previousTodos = queryClient.getQueryData(["todos"]);
+      // 데이터 갱신 요청 전에 실행할 작업들
+      await queryClient.cancelQueries({ queryKey: ["todos"] }); // "todos" 쿼리 취소
+      const previousTodos = queryClient.getQueryData(["todos"]); // 이전 "todos" 데이터 가져오기
       queryClient.setQueryData(["todos"], (prevTodos) =>
+        // 새로운 "todos" 데이터 설정
         prevTodos.map((todo) =>
           todo.id === id ? { ...todo, liked: !todo.liked } : todo
         )
       );
-      return { previousTodos };
+      return { previousTodos }; // 롤백을 위해 이전 데이터 반환
     },
     onError: (err, newTodo, context) => {
+      // 에러 발생 시 실행할 작업
       console.error(err);
-      queryClient.setQueryData(["todos"], context.previousTodos);
+      queryClient.setQueryData(["todos"], context.previousTodos); // 이전 데이터로 "todos" 데이터 복원
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["todos"] });
+      // mutate 함수가 끝난 후 실행할 작업
+      queryClient.invalidateQueries({ queryKey: ["todos"] }); // "todos" 쿼리 무효화 (다시 불러오기)
     },
   });
+
   const handleLike = async ({ id, currentLiked }) => {
     likeMutation.mutate({ id, currentLiked });
+    // mutate 실행 시 전달인자는 mutationFn과 onMutate의 매개변수로 할당됨
+    // mutate 함수에 여러 개의 인자를 전달하고 싶으면 위와 같이 하나의 객체 안에 값을 넣어서 전달함
   };
 
   if (isPending) {
